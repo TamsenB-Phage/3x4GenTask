@@ -1,0 +1,16 @@
+name: gamin-fit
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11  # or your preferred version
+  - pip
+  - pandas
+  - openpyxl
+  - matplotlib
+  - seaborn
+  - scipy
+  - plotly
+  - pip:
+    - garmin-fit-sdk
+    - h3

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gen3x4_analysis"
+version = "0.1.0"
+dependencies = [
+    "pandas",
+    "numpy",
+    "scipy",
+    "plotly",
+    "h3",
+    "matplotlib"
+]
+
+[tool.setuptools]
+# This is the "Monorepo" magic: tell it to treat these 3 folders as packages
+packages = ["preprocessing", "analysis", "reporting"]
