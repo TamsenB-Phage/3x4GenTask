@@ -6,13 +6,17 @@ This project provides an end-to-end pipeline for analysing endurance training da
 
 ## 📂 Project Structure
 ```
+repo/
 ├── preprocessing/   # Data extraction, cleaning, and orchestration
 ├── analysis/        # Core analytics (Foster load, ACWR, long run metrics)
 ├── reporting/       # HTML report generation
 ├── experiments/     # Experimental / exploratory analyses (e.g. recovery)
-├── conda_envs/      # Conda environment specification
-├── ../workouts/     # 📥 Place raw Garmin `.fit` files here
-└── ../out/          # 📤 Auto-generated outputs (data + reports)
+└── conda_envs/      # Conda environment specification
+```
+**External directories (same level as `repo/`)**
+```
+workouts/            # 📥 Place raw Garmin `.fit` files here
+out/                 # 📤 Auto-generated outputs (data + reports)
 ```
 ---
 
