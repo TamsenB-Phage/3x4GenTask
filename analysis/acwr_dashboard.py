@@ -55,7 +55,7 @@ def build_ultra_acwr_dashboard(summary_tsv_path: str) -> go.Figure:
 
     # Avoid divide-by-zero + early instability
     chronic_safe = chronic.replace(0, pd.NA)
-    acwr = (acute / chronic_safe).fillna(method="bfill")
+    acwr = (acute / chronic_safe).bfill()
 
     # -----------------------------
     # Weekly stacked bars (same logic)

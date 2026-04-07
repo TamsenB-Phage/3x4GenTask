@@ -34,7 +34,8 @@ def summarize_from_tsvs(base_dir: str):
                 "duration_min": round(row.get('total_elapsed_time', 0) / 60, 2),
                 "avg_hr": row.get('avg_heart_rate'),
                 "max_hr": row.get('max_heart_rate'),
-                "folder": folder.name
+                "folder": folder.name,
+                "distance": row.get('total_distance', 0)
             }
 
             if record_file.exists():
@@ -53,7 +54,7 @@ def summarize_from_tsvs(base_dir: str):
     if not df.empty:
         df['date'] = pd.to_datetime(df['date'])
         df = df.sort_values('date')
-        cols = ["date", "sport", "sub_sport", "is_indoor", "duration_min", "avg_hr", "max_hr", "min_hr_manual", "folder"]
+        cols = ["date", "sport", "sub_sport", "is_indoor", "duration_min", "avg_hr", "max_hr", "min_hr_manual", "folder", "distance"]
         df = df[[c for c in cols if c in df.columns]]
     return df
 
