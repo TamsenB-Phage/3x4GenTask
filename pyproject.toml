@@ -1,19 +1,52 @@
+# --------------------------------------------------
+# Build system configuration
+# --------------------------------------------------
+
 [build-system]
+# Minimum requirements to build the package
+# setuptools >= 61 is required for PEP 621 (modern pyproject metadata support)
 requires = ["setuptools>=61.0"]
+
+# Backend used to build the package
 build-backend = "setuptools.build_meta"
 
+
+# --------------------------------------------------
+# Project metadata
+# --------------------------------------------------
+
 [project]
+# Package name (used when installing via pip)
 name = "gen3x4_analysis"
+
+# Current version of the project
 version = "0.1.0"
+
+# Runtime dependencies required for the project to function
+# These will be installed automatically when the package is installed
 dependencies = [
-    "pandas",
-    "numpy",
-    "scipy",
-    "plotly",
-    "h3",
-    "matplotlib"
+    "pandas",      # Data manipulation and tabular processing
+    "numpy",       # Numerical computations and array operations
+    "scipy",       # Signal processing (e.g. Savitzky-Golay smoothing)
+    "plotly",      # Interactive visualisations for dashboards and reports
+    "h3",          # Geospatial indexing (used for route matching)
+    "matplotlib"   # Supporting plotting utilities (fallback/static plots)
 ]
 
+
+# --------------------------------------------------
+# setuptools configuration
+# --------------------------------------------------
+
 [tool.setuptools]
-# This is the "Monorepo" magic: tell it to treat these 3 folders as packages
-packages = ["preprocessing", "analysis", "reporting"]
+
+# Explicitly define packages in this repository.
+# This enables a "monorepo-style" layout without a src/ directory.
+#
+# Each listed folder is treated as a top-level Python package:
+# - preprocessing → data ingestion, cleaning, orchestration
+# - analysis      → metrics, feature engineering, plotting logic
+# - reporting     → HTML report generation and presentation layer
+#
+# This approach keeps the pipeline modular while allowing editable installs.
+packages = ["preprocessing", "analysis", "reporting", "experiments"]

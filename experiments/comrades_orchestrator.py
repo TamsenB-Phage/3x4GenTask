@@ -1,9 +1,20 @@
+"""
+⚠️ EXPERIMENTAL MODULE
+
+This module contains exploratory analysis for the Comrades Marathon.
+
+- APIs are unstable
+- Assumptions may change
+- Not used in the main reporting pipeline
+
+Promote to `analysis/` only once validated.
+"""
 import pandas as pd
 from pathlib import Path
 from preprocessing.extraction import extract_pause_snapshots
-from analysis.pause_stitching import calculate_universal_offsets, categorize_comrades_phases
+from experiments.pause_alignment import calculate_universal_offsets, categorize_comrades_phases
 
-def run_comrades_analysis(summary_df, out_dir="../out", comrades_date="2025-06-08"):
+def run_comrades_experiment(summary_df, out_dir="../out", comrades_date="2025-06-08"):
     """Specialized recovery analysis for the Comrades Marathon event.
 
     Args:
@@ -30,7 +41,7 @@ def run_comrades_analysis(summary_df, out_dir="../out", comrades_date="2025-06-0
     # 2. ANALYSIS: Stitching & Phasing
     if not all_pause_metadata:
         print("No recovery snapshots found.")
-        return None
+        return []
 
     print("\n--- Phase 5: Stitching & Phasing Analysis ---")
     pause_summary = pd.DataFrame(all_pause_metadata)
