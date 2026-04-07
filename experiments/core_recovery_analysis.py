@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+from matplotlib.lines import Line2D
 
 from scipy.signal import savgol_filter
 
@@ -160,7 +161,7 @@ def plot_global_recovery_savgol(
 def plot_universal_stitched_recovery(
     pause_summary,
     pause_dir,
-    work_range=(50000, 1000000)
+    work_range=(50000, 4000000)
 ):
     """
     Creates a stitched universal recovery curve using gap-bridging.
@@ -256,7 +257,7 @@ def plot_comrades_three_phase(
     pause_summary,
     pause_dir,
     comrades_date_str,
-    work_range=(50000, 1000000)
+    work_range=(50000, 4000000)
 ):
     """
     Plots recovery curves split into:
@@ -298,9 +299,9 @@ def plot_comrades_three_phase(
     pauses.sort(key=lambda x: x["hr_series"][0], reverse=True)
 
     colors = {
-        "Pre": "#00CED1",
-        "Race": "#FF00FF",
-        "Post": "#FF8C00"
+        "Pre": "#00CED1",   # Cyan
+        "Race": "#FF00FF",  # Magenta
+        "Post": "#FF8C00"   # Orange
     }
 
     plt.figure(figsize=(14, 8))
@@ -346,8 +347,27 @@ def plot_comrades_three_phase(
             if h_int not in hr_to_time or synth_t < hr_to_time[h_int]:
                 hr_to_time[h_int] = synth_t
 
+    # -----------------------------
+    # Legend (NEW)
+    # -----------------------------
+    legend_elements = [
+        Line2D([0], [0], color=colors["Pre"], lw=3, label="Pre-Comrades (Training)"),
+        Line2D([0], [0], color=colors["Race"], lw=3, label="Race Day"),
+        Line2D([0], [0], color=colors["Post"], lw=3, label="Post-Comrades (Recovery)")
+    ]
+
+    plt.legend(
+        handles=legend_elements,
+        loc="upper right",
+        frameon=True
+    )
+
+    # -----------------------------
+    # Labels & layout
+    # -----------------------------
     plt.title("Comrades 3-Phase Recovery Analysis")
     plt.xlabel("Synthetic Seconds")
     plt.ylabel("Heart Rate (bpm)")
     plt.grid(alpha=0.15)
+
     plt.show()

@@ -79,21 +79,6 @@ run_global_orchestration()"
 
 
 # --------------------------------------------------
-# Comrades-specific analysis
-# --------------------------------------------------
-
-# Runs preprocessing + additional race-specific analysis
-# Useful for deep-diving into a target event (e.g. Comrades)
-comrades:
-	@conda run -n $(ENV_NAME) python -c "\
-import pandas as pd; \
-from preprocessing.orchestrator import run_global_orchestration; \
-from preprocessing.comrades_orchestrator import run_comrades_analysis; \
-df, _ = run_global_orchestration(); \
-run_comrades_analysis(df)"
-
-
-# --------------------------------------------------
 # Reporting
 # --------------------------------------------------
 
