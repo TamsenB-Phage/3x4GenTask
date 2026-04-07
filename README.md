@@ -21,52 +21,6 @@ This project provides an end-to-end pipeline for analysing endurance training da
 ### 1. Add Your Data
 
 Place your Garmin `.fit` files in:
-`# 🏃 Ultra Endurance Training Analysis
-
-This project provides an end-to-end pipeline for analysing endurance training data from Garmin `.fit` files. It extracts raw activity data, builds structured summaries, and generates an interactive HTML report with insights into training load, fatigue, and running mechanics.
-
----
-
-## 📂 Project Structure
-
-- `preprocessing/` → Data extraction, cleaning, and orchestration  
-- `analysis/` → Core analytics (Foster load, ACWR, long run metrics)  
-- `reporting/` → HTML report generation  
-- `experiments/` → Experimental and exploratory analyses (e.g. recovery)  
-- `conda_envs/` → Environment specification  
-- `../workouts/` → **Place your raw `.fit` files here**  
-- `../out/` → Generated outputs (intermediate + final report)
-
----
-
-## 🚀 Quick Start
-
-### 1. Add Your Data
-
-Place your Garmin `.fit` files in:
-`# 🏃 Ultra Endurance Training Analysis
-
-This project provides an end-to-end pipeline for analysing endurance training data from Garmin `.fit` files. It extracts raw activity data, builds structured summaries, and generates an interactive HTML report with insights into training load, fatigue, and running mechanics.
-
----
-
-## 📂 Project Structure
-
-- `preprocessing/` → Data extraction, cleaning, and orchestration  
-- `analysis/` → Core analytics (Foster load, ACWR, long run metrics)  
-- `reporting/` → HTML report generation  
-- `experiments/` → Experimental and exploratory analyses (e.g. recovery)  
-- `conda_envs/` → Environment specification  
-- `../workouts/` → **Place your raw `.fit` files here**  
-- `../out/` → Generated outputs (intermediate + final report)
-
----
-
-## 🚀 Quick Start
-
-### 1. Add Your Data
-
-Place your Garmin `.fit` files in:
 `../workouts/`
 
 ---
