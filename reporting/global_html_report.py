@@ -4,10 +4,14 @@ from analysis.acwr_dashboard import build_ultra_acwr_dashboard
 from analysis.long_run_vr import plot_longest_run_metric_interactive
 from analysis.long_run_mechanics_hr import plot_long_run_mechanics_hr
 
+BASE_DIR = Path(__file__).resolve().parents[1]  # repo/
+OUT_DIR = BASE_DIR.parent / "out"               # sibling to repo/
+WORKOUTS_DIR = BASE_DIR.parent / "workouts"    # sibling to repo/
+
 
 def generate_training_report(
-    summary_path: str,
-    output_html: str = "../out/training_report.html",
+    summary_path: str | Path = None,
+    output_html: str | Path = None,
 ):
     """
     Generates a multi-section HTML training report with:
@@ -15,10 +19,22 @@ def generate_training_report(
     - Ultra ACWR analysis
     """
 
-    output_path = Path(output_html)
+    # -----------------------------
+    # Resolve paths safely (NEW)
+    # -----------------------------
+    if summary_path is None:
+        summary_path = OUT_DIR / "master_workout_summary.tsv"
+    else:
+        summary_path = Path(summary_path)
+
+    if output_html is None:
+        output_path = OUT_DIR / "training_report.html"
+    else:
+        output_path = Path(output_html)
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Build figures (DO NOT CHANGE ORDER)
+    # Build figures 
     fosters_fig = build_fosters_dashboard(summary_path)
     acwr_fig = build_ultra_acwr_dashboard(summary_path)
     vr_fig = plot_longest_run_metric_interactive(summary_path, "../out", metric="vertical_ratio")

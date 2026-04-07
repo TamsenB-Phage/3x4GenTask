@@ -71,7 +71,7 @@ The report includes:
 
 ---
 
-### 🧪 Experimental Analysis (Optional)
+## 🧪 Experimental Analysis (Optional)
 
 ```bash
 make recovery
@@ -86,7 +86,7 @@ Outputs are visual (matplotlib) and intended for research, not reporting.
 
 ---
 
-### 🧰 Environment Details
+## 🧰 Environment Details
 
 The project uses a conda environment defined in:
 
@@ -101,7 +101,7 @@ The project uses a conda environment defined in:
 
 ---
 
-###  ⚙️ Non-Conda Setup (Alternative)
+##  ⚙️ Non-Conda Setup (Alternative)
 
 If you prefer not to use conda:
 
@@ -121,7 +121,7 @@ pip install -e .
 ```
 ---
 
-### 📊 Output Overview
+## 📊 Output Overview
 
 After running the pipeline:
 
@@ -132,7 +132,7 @@ After running the pipeline:
 
 ---
 
-### Notes
+## Notes
 
 - The pipeline is designed for ultra-endurance training analysis
 - Metrics are most meaningful when interpreted together (load + mechanics + physiology)
@@ -140,7 +140,16 @@ After running the pipeline:
 
 ---
 
-### ✅ Recommended Workflow
+## 🪟 Windows Support
+
+This project is developed on macOS/Linux but can be run on Windows.
+
+For setup instructions, see:
+👉 `docs/windows_setup.md`
+
+---
+
+## ✅ Recommended Workflow
 
 ```bash
 make setup-all

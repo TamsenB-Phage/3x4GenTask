@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 
 from experiments.core_recovery_analysis import (
     analyze_global_pauses_capped,
@@ -10,7 +11,7 @@ from experiments.core_recovery_analysis import (
 
 def run_recovery_analysis(
     summary_path: str,
-    base_dir: str = "../out",
+    base_dir: str | None = None,
     comrades_date: str = "2025-06-08",
 ):
     """
@@ -29,11 +30,29 @@ def run_recovery_analysis(
 
     Args:
         summary_path (str): Path to master workout summary TSV.
-        base_dir (str): Directory containing processed activity folders.
+        base_dir (str | None): Directory containing processed activity folders.
+                               If None, inferred from summary_path.
         comrades_date (str): Date of Comrades Marathon (YYYY-MM-DD).
     """
 
     print("\n=== Experimental Recovery Analysis ===")
+
+    # -----------------------------
+    # Resolve paths (CROSS-PLATFORM SAFE)
+    # -----------------------------
+    summary_path = Path(summary_path).resolve()
+
+    if not summary_path.exists():
+        raise FileNotFoundError(f"Summary file not found: {summary_path}")
+
+    # Infer base_dir if not provided
+    if base_dir is None:
+        base_dir = summary_path.parent
+    else:
+        base_dir = Path(base_dir).resolve()
+
+    print(f"Using summary file: {summary_path}")
+    print(f"Using base directory: {base_dir}")
 
     # -----------------------------
     # Load summary
