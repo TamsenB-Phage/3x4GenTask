@@ -4,7 +4,7 @@ from pathlib import Path
 import plotly.graph_objects as go
 from scipy.signal import savgol_filter
 from statsmodels.nonparametric.smoothers_lowess import lowess
-from preprocessing import safe_savgol
+from preprocessing.smoothing import safe_savgol
 
 
 def plot_longest_run_metric_interactive(summary_tsv, base_out_dir, metric="vertical_ratio"):

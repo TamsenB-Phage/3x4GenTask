@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy.signal import savgol_filter
 from statsmodels.nonparametric.smoothers_lowess import lowess
-from preprocessing import safe_savgol
+from preprocessing.smoothing import safe_savgol
 
 
 def compute_lowess_trend(x, y, frac=0.08):
