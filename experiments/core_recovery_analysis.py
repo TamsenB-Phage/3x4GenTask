@@ -29,7 +29,7 @@ def analyze_global_pauses_capped(
     """
     base_path = Path(base_dir)
     pause_export_dir = base_path / "global_pauses_capped"
-    pause_export_dir.mkdir(exist_ok=True)
+    pause_export_dir.mkdir(parents=True, exist_ok=True)
 
     all_pauses = []
 
@@ -42,7 +42,6 @@ def analyze_global_pauses_capped(
 
         df = pd.read_csv(record_path, sep="\t")
 
-        # --- Robust column handling ---
         if "heart_rate" not in df.columns:
             continue
 
@@ -55,7 +54,6 @@ def analyze_global_pauses_capped(
         if speed_col not in df.columns:
             continue
 
-        # --- Detect pauses ---
         df["is_paused"] = df[speed_col] < speed_threshold
         df["pause_group"] = (df["is_paused"] != df["is_paused"].shift()).cumsum()
 
@@ -68,7 +66,6 @@ def analyze_global_pauses_capped(
             if pd.isna(start_power) or start_power < min_work_joules:
                 continue
 
-            # --- Trim to 60s ---
             pause_60 = pause_data.head(60).copy()
 
             file_name = f"pause_{folder}_{p_id}.tsv"
@@ -89,7 +86,20 @@ def analyze_global_pauses_capped(
 
 
 # --------------------------------------------------
-# Plot 1: Savitzky-Golay Recovery (Baseline)
+# Helper: Save figure
+# --------------------------------------------------
+def _save_figure(fig, pause_dir, filename):
+    recovery_dir = pause_dir.parent / "recovery"
+    recovery_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = recovery_dir / filename
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+
+    print(f"Saved: {output_path}")
+
+
+# --------------------------------------------------
+# Plot 1: Savitzky-Golay Recovery
 # --------------------------------------------------
 def plot_global_recovery_savgol(
     pause_summary,
@@ -101,7 +111,7 @@ def plot_global_recovery_savgol(
         print("No pauses to plot.")
         return
 
-    fig, ax = plt.subplots(figsize=(12, 8))  # ✅ explicit axes
+    fig, ax = plt.subplots(figsize=(12, 8))
 
     norm = plt.Normalize(
         pause_summary["power_at_start"].min(),
@@ -129,7 +139,6 @@ def plot_global_recovery_savgol(
         if len(hr_smooth) == 60:
             all_series.append(hr_smooth)
 
-    # --- Global average ---
     if all_series:
         avg = np.mean(all_series, axis=0)
         ax.plot(
@@ -141,9 +150,8 @@ def plot_global_recovery_savgol(
             label="Global Average"
         )
 
-    # ✅ Proper colorbar attachment
     sm = cm.ScalarMappable(norm=norm, cmap=colormap)
-    sm.set_array([])  # required for matplotlib
+    sm.set_array([])
     fig.colorbar(sm, ax=ax, label="Accumulated Power (J)")
 
     ax.set_title("Heart Rate Recovery (Savitzky-Golay Smoothed)")
@@ -152,6 +160,7 @@ def plot_global_recovery_savgol(
     ax.legend()
     ax.grid(alpha=0.1)
 
+    _save_figure(fig, pause_dir, "global_recovery_savgol.png")
     plt.show()
 
 
@@ -163,9 +172,6 @@ def plot_universal_stitched_recovery(
     pause_dir,
     work_range=(50000, 4000000)
 ):
-    """
-    Creates a stitched universal recovery curve using gap-bridging.
-    """
     min_work, max_work = work_range
 
     pauses = []
@@ -187,124 +193,10 @@ def plot_universal_stitched_recovery(
 
     pauses.sort(key=lambda x: x["hr_series"][0], reverse=True)
 
-    # ✅ Create explicit axes
     fig, ax = plt.subplots(figsize=(12, 8))
 
     norm = plt.Normalize(min_work, max_work)
     colormap = cm.plasma
-
-    hr_to_time = {}
-    FALLBACK_DECAY = 1.0
-
-    for i, pause in enumerate(pauses):
-        hr = pause["hr_series"]
-
-        hr_smooth = (
-            savgol_filter(hr, 11, 2) if len(hr) > 11 else hr
-        )
-
-        start_hr = int(hr_smooth[0])
-
-        if i == 0:
-            offset = 0
-        else:
-            if start_hr in hr_to_time:
-                offset = hr_to_time[start_hr]
-            else:
-                existing = np.array(list(hr_to_time.keys()))
-                higher = existing[existing > start_hr]
-
-                if len(higher) > 0:
-                    anchor = higher.min()
-                    offset = hr_to_time[anchor] + (anchor - start_hr) / FALLBACK_DECAY
-                else:
-                    offset = 0
-
-        x = np.arange(len(hr_smooth)) + offset
-
-        ax.plot(
-            x,
-            hr_smooth,
-            color=colormap(norm(pause["power"])),
-            alpha=0.3
-        )
-
-        # Update HR → synthetic time map
-        for t, h in enumerate(hr_smooth):
-            synth_t = t + offset
-            h_int = int(h)
-
-            if h_int not in hr_to_time or synth_t < hr_to_time[h_int]:
-                hr_to_time[h_int] = synth_t
-
-    # ✅ Proper colorbar
-    sm = cm.ScalarMappable(norm=norm, cmap=colormap)
-    sm.set_array([])
-    fig.colorbar(sm, ax=ax, label="Accumulated Power (J)")
-
-    ax.set_title("Universal Stitched Recovery Curve")
-    ax.set_xlabel("Synthetic Seconds")
-    ax.set_ylabel("Heart Rate (bpm)")
-    ax.grid(alpha=0.15)
-
-    plt.show()
-
-
-# --------------------------------------------------
-# Plot 3: Comrades 3-Phase Analysis
-# --------------------------------------------------
-def plot_comrades_three_phase(
-    pause_summary,
-    pause_dir,
-    comrades_date_str,
-    work_range=(50000, 4000000)
-):
-    """
-    Plots recovery curves split into:
-    - Pre-Comrades
-    - Race Day
-    - Post-Comrades
-    """
-    comrades_dt = pd.to_datetime(comrades_date_str).tz_localize("UTC")
-    race_day = comrades_dt.date()
-
-    min_work, max_work = work_range
-
-    pauses = []
-
-    for _, row in pause_summary.iterrows():
-        if not (min_work <= row["power_at_start"] <= max_work):
-            continue
-
-        df = pd.read_csv(pause_dir / row["pause_file"], sep="\t")
-
-        ts = pd.to_datetime(df["timestamp"].iloc[0])
-
-        if ts.date() == race_day:
-            phase = "Race"
-        elif ts > comrades_dt:
-            phase = "Post"
-        else:
-            phase = "Pre"
-
-        pauses.append({
-            "hr_series": df["heart_rate"].head(60).values,
-            "power": row["power_at_start"],
-            "phase": phase
-        })
-
-    if not pauses:
-        return
-
-    pauses.sort(key=lambda x: x["hr_series"][0], reverse=True)
-
-    colors = {
-        "Pre": "#00CED1",   # Cyan
-        "Race": "#FF00FF",  # Magenta
-        "Post": "#FF8C00"   # Orange
-    }
-
-    plt.figure(figsize=(14, 8))
 
     hr_to_time = {}
     FALLBACK_DECAY = 1.0
@@ -332,7 +224,109 @@ def plot_comrades_three_phase(
 
         x = np.arange(len(hr_smooth)) + offset
 
-        plt.plot(
+        ax.plot(
+            x,
+            hr_smooth,
+            color=colormap(norm(pause["power"])),
+            alpha=0.3
+        )
+
+        for t, h in enumerate(hr_smooth):
+            synth_t = t + offset
+            h_int = int(h)
+
+            if h_int not in hr_to_time or synth_t < hr_to_time[h_int]:
+                hr_to_time[h_int] = synth_t
+
+    sm = cm.ScalarMappable(norm=norm, cmap=colormap)
+    sm.set_array([])
+    fig.colorbar(sm, ax=ax, label="Accumulated Power (J)")
+
+    ax.set_title("Universal Stitched Recovery Curve")
+    ax.set_xlabel("Synthetic Seconds")
+    ax.set_ylabel("Heart Rate (bpm)")
+    ax.grid(alpha=0.15)
+
+    _save_figure(fig, pause_dir, "universal_stitched_recovery.png")
+    plt.show()
+
+
+# --------------------------------------------------
+# Plot 3: Comrades 3-Phase Analysis
+# --------------------------------------------------
+def plot_comrades_three_phase(
+    pause_summary,
+    pause_dir,
+    comrades_date_str,
+    work_range=(50000, 4000000)
+):
+    comrades_dt = pd.to_datetime(comrades_date_str).tz_localize("UTC")
+    race_day = comrades_dt.date()
+
+    min_work, max_work = work_range
+
+    pauses = []
+
+    for _, row in pause_summary.iterrows():
+        if not (min_work <= row["power_at_start"] <= max_work):
+            continue
+
+        df = pd.read_csv(pause_dir / row["pause_file"], sep="\t")
+        ts = pd.to_datetime(df["timestamp"].iloc[0])
+
+        if ts.date() == race_day:
+            phase = "Race"
+        elif ts > comrades_dt:
+            phase = "Post"
+        else:
+            phase = "Pre"
+
+        pauses.append({
+            "hr_series": df["heart_rate"].head(60).values,
+            "power": row["power_at_start"],
+            "phase": phase
+        })
+
+    if not pauses:
+        return
+
+    pauses.sort(key=lambda x: x["hr_series"][0], reverse=True)
+
+    colors = {
+        "Pre": "#00CED1",
+        "Race": "#FF00FF",
+        "Post": "#FF8C00"
+    }
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    hr_to_time = {}
+    FALLBACK_DECAY = 1.0
+
+    for i, pause in enumerate(pauses):
+        hr = pause["hr_series"]
+        hr_smooth = savgol_filter(hr, 11, 2) if len(hr) > 11 else hr
+
+        start_hr = int(hr_smooth[0])
+
+        if i == 0:
+            offset = 0
+        else:
+            if start_hr in hr_to_time:
+                offset = hr_to_time[start_hr]
+            else:
+                existing = np.array(list(hr_to_time.keys()))
+                higher = existing[existing > start_hr]
+
+                if len(higher) > 0:
+                    anchor = higher.min()
+                    offset = hr_to_time[anchor] + (anchor - start_hr) / FALLBACK_DECAY
+                else:
+                    offset = 0
+
+        x = np.arange(len(hr_smooth)) + offset
+
+        ax.plot(
             x,
             hr_smooth,
             color=colors[pause["phase"]],
@@ -347,27 +341,17 @@ def plot_comrades_three_phase(
             if h_int not in hr_to_time or synth_t < hr_to_time[h_int]:
                 hr_to_time[h_int] = synth_t
 
-    # -----------------------------
-    # Legend (NEW)
-    # -----------------------------
     legend_elements = [
-        Line2D([0], [0], color=colors["Pre"], lw=3, label="Pre-Comrades (Training)"),
+        Line2D([0], [0], color=colors["Pre"], lw=3, label="Pre-Comrades"),
         Line2D([0], [0], color=colors["Race"], lw=3, label="Race Day"),
-        Line2D([0], [0], color=colors["Post"], lw=3, label="Post-Comrades (Recovery)")
+        Line2D([0], [0], color=colors["Post"], lw=3, label="Post-Comrades")
     ]
 
-    plt.legend(
-        handles=legend_elements,
-        loc="upper right",
-        frameon=True
-    )
+    ax.legend(handles=legend_elements, loc="upper right")
+    ax.set_title("Comrades 3-Phase Recovery Analysis")
+    ax.set_xlabel("Synthetic Seconds")
+    ax.set_ylabel("Heart Rate (bpm)")
+    ax.grid(alpha=0.15)
 
-    # -----------------------------
-    # Labels & layout
-    # -----------------------------
-    plt.title("Comrades 3-Phase Recovery Analysis")
-    plt.xlabel("Synthetic Seconds")
-    plt.ylabel("Heart Rate (bpm)")
-    plt.grid(alpha=0.15)
-
+    _save_figure(fig, pause_dir, "comrades_3_phase_recovery.png")
     plt.show()
